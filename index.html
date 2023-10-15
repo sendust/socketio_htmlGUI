@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<script src="/socket.io/socket.io.js"></script>
+
+<input id="inputbox" > </input> 
+<button id="btn" onclick="button1()"> send  </button> 
+
+</br>
+
+
+<script>
+	var socket = io('http://localhost:5000');
+	var socketid = 0;
+	socket.on('askForUserId', () => {
+		socket.emit('userIdReceived', socket.id);
+		socketid = socket.id;
+		});
+
+	socket.on('reply_engine', function (message) {
+		document.body.appendChild(
+			document.createTextNode(message)
+		);
+
+	});
+
+	
+	socket.on('msg_engine', function (message) {
+		document.body.appendChild(
+			document.createTextNode(message.data)
+		);
+	});
+	
+	
+	
+	
+function button1()
+{
+	let txt = document.getElementById("inputbox").value;
+	console.log(txt);
+	socket.emit('msg_gui', {receiverId : socketid, data : txt});
+
+}
+</script>
+</body>
+</html>

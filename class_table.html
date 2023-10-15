@@ -1,0 +1,265 @@
+<html>
+<head>
+
+</head>
+<style>
+.tbl th, .tbl td{
+    border: solid 1px ;
+    padding : 1px;
+    text-align : center;
+
+};
+
+
+</style>
+
+<style>
+#vscrl{
+    height: 50%;
+    overflow-y: auto;
+    /*to prevent it from taking the whole width of the body*/
+    /*display: inline-block;*/
+};
+
+</style>
+
+
+
+
+<body>
+
+<h2 id="line1"> h2 line </h2>
+<h2 id="line2"> h2 line2 </h2>
+<input id="input1"> input1 </input></br>
+<input id="input2"> input2 </input></br>
+<input id="input3"> input3 </input></br>
+<button onclick="deleteall()"> delete all </button>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<button onclick="appendall()"> append all </button>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<button onclick="tbl.delete_n(1)"> delete 1 </button>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+<button onclick="func_test()"> test </button> <br>
+
+
+<div id="vscrl">
+<table id="tb1", class="tbl", style="width:100%">
+<tr>
+<th style="width:50%">이름 </th>
+<th style="width:25%">나이 </th>
+<th>참고 </th>
+</tr>
+</table>
+</div>
+
+</body>
+
+<script>
+
+
+class sendust_table
+{
+    constructor(id)
+    {
+        this.table = id;
+        this.name = "table00";
+        this.header_index = [];
+        this.row_id = 10;
+        this.callback = function(){};
+        var headerCells= id.getElementsByTagName("th");     // get table header tag
+        let idx = 0;
+        for (let item of headerCells){
+            console.log(item.innerText);
+            this.header_index[item.innerText] = idx;
+            idx += 1;
+        }
+        console.log(this.header_index);
+    }
+    
+    set_name(name)
+    {
+        this.name = name;
+    }
+    
+    
+    get_new_row()   // insert new row with register default cb function
+    {
+        var row = this.table.insertRow();
+        this.row_id += 1;
+		row.id = this.name + "_" + this.row_id;
+        row.addEventListener('click', this.onclick_row, false);
+		row.param = row.id;		// Depricated... 2023/10/12
+		row.cb = this.callback;
+        return row
+    }
+    
+    get_row(n_row)  // Get cell data of row(n)
+    {
+        var row = this.table.rows[n_row];
+        var ary_cell = [];
+        for (let cell of row.cells){
+            ary_cell.push(cell.innerText);
+        }
+        return ary_cell;
+    }
+    
+    add_listener(func)  // Add user defined callback function (onclick)
+    {
+        this.callback = func;
+    }
+    
+    append(row_single)  // add new row with cell data (array)
+    {
+        let row = this.get_new_row()
+        row_single.forEach(function(value, i){
+            let cell = row.insertCell(i);
+            cell.innerText = row_single[i];
+        });
+    }
+    
+    
+    modify_cell(n_row, n_cell, data)  // Modify single cell data (row(n), col(n))
+    {
+        console.log(`change cell data,  ${n_row} ${n_cell} ${data}`);
+        this.table.rows[n_row].cells[n_cell].innerText = data;
+    }
+    
+    get_length()  // Get table length (number of row)
+    {
+        return this.table.rows.length;
+    }
+    
+    
+    delete_all()
+    {
+        var rowCount = this.get_length();
+        for (var i = 1; i < rowCount; i++) {
+            this.table.deleteRow(1);
+        }
+    }
+    
+    delete_n(row_number)
+    {
+        if (row_number <= this.get_length()){
+            this.table.deleteRow(row_number);
+            console.log(`table name ${this.name} of row number ${row_number} deleted..`)
+        }
+    }
+    
+    onclick_row(evt)        // Default cb function on click
+    {
+		let row = evt.currentTarget;
+		let data = [];
+		for (let item of row.cells){
+            data.push(item.innerText)};
+            console.log(data);
+		console.log("start callback ..");
+        row.cb(row.id, data)  // launch user defined cb. if exist
+		return data;
+    }
+	
+	
+	onclick_row2(evt)      // depricated.. do not use....
+    {
+		let id_row = evt.currentTarget.param;
+		console.log(id_row);
+		let row = document.getElementById(id_row);
+		let data = [];
+		for (let item of row.cells){
+            data.push(item.innerText)};
+            console.log(data);
+		console.log("start callback ..");
+        evt.currentTarget.cb(id_row, data)  // launch user defined cb. if exist
+		return data;
+    }
+    
+    get_matching_row(name_header, value)
+    {
+        var result = [];
+        for (var i = 1, row; row=this.table.rows[i]; i++)
+        {
+            if (row.cells[this.header_index[name_header]].innerText == value)
+            {
+                console.log("found matching..." + name_header +  " == " + value)
+                console.log(row.id)
+                result.push(row.id)
+            }
+        }
+        console.log(result);
+        return result;
+    }
+    
+    get_index_from_id(id_row)
+    {
+        let row = document.getElementById(id_row);
+        return row.rowIndex;
+    }
+    
+}
+
+
+
+const table = document.getElementById("tb1");
+var tbl = new sendust_table(table);
+tbl.set_name("tID");
+
+tbl.add_listener(onclick_sample);
+
+function appendall()
+{
+    console.log("append row..");
+    tbl.append(["진신우", "49", "남자"]);
+    tbl.append(["홍길동", "30", "남자"]);
+    tbl.append(["진달래", "47", "여자"]);
+}
+
+
+function deleteall()
+{
+    console.log("delete all row..");
+    tbl.delete_all();
+}
+
+
+function onclick_sample(id, data)
+{
+	console.log("callback.... print argument");
+	console.log("tr id is " + id);
+    console.log("data is " + data);
+}
+
+function func_test2()
+{
+    let text1 = document.getElementById('input1').value;
+    let text2 = document.getElementById('input2').value;
+    let text3 = document.getElementById('input3').value;
+    console.log(text1 + text2 + text3);
+    tbl.modify_cell(text1, text2, text3);
+}
+
+
+function func_test3()
+{
+    let text1 = document.getElementById('input1').value;
+    let text2 = document.getElementById('input2').value;
+    let text3 = document.getElementById('input3').value;
+    console.log(text1 + text2 + text3);
+    console.log(tbl.get_row(text1));
+}
+
+function func_test()
+{
+    let text1 = document.getElementById('input1').value;
+    let text2 = document.getElementById('input2').value;
+    let text3 = document.getElementById('input3').value;
+    console.log(text1 + text2 + text3);
+    console.log(tbl.get_matching_row(text1, text2));
+    document.getElementById('line1').innerHTML = tbl.get_index_from_id(tbl.get_matching_row(text1, text2)[0]);
+}
+
+</script>
+
+
+
+</html>
